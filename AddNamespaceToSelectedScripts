@@ -1,0 +1,50 @@
+using UnityEngine;
+using UnityEditor;
+using System.IO;
+namespace DownhillRide
+{
+    public class AddNamespaceToSelectedScripts : EditorWindow
+    {
+        private string targetNamespace = "YourNamespace"; // Change "YourNamespace" 
+
+        [MenuItem("Tools/Add Namespace To Selected Scripts")]
+        public static void ShowWindow()
+        {
+            EditorWindow window = GetWindow<AddNamespaceToSelectedScripts>("Add Namespace");
+            window.Show();
+        }
+
+        void OnGUI()
+        {
+            GUILayout.Label("Add Namespace To Selected Scripts", EditorStyles.boldLabel);
+            targetNamespace = EditorGUILayout.TextField("Namespace:", targetNamespace);
+
+            if (GUILayout.Button("Add Namespace"))
+            {
+                AddNamespaceToSelected();
+            }
+        }
+
+        private void AddNamespaceToSelected()
+        {
+            foreach (Object obj in Selection.objects)
+            {
+                string assetPath = AssetDatabase.GetAssetPath(obj);
+
+                if (!string.IsNullOrEmpty(assetPath) && assetPath.EndsWith(".cs"))
+                {
+                    string contents = File.ReadAllText(assetPath);
+
+                    if (!contents.Contains("namespace " + targetNamespace))
+                    {
+                        contents = "namespace " + targetNamespace + "\n{\n" + contents + "\n}";
+                        File.WriteAllText(assetPath, contents);
+                    }
+                }
+            }
+
+            AssetDatabase.Refresh();
+            Debug.Log("Namespace added to selected scripts.");
+        }
+    }
+}
