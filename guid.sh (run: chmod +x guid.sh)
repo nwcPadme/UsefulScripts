@@ -1,0 +1,74 @@
+#!/bin/bash
+
+find(){
+	if [ -z "$1" ]; then
+                help
+                exit 1;
+        fi
+
+	echo "Searching for GUID references..."
+	numFound=$(grep -rl $1 Assets | wc -l)
+	if [ $numFound -gt 0 ]; then
+		echo "Found $numFound matches for that GUID"
+	else
+		echo "GUID not found"
+	fi
+}
+
+replace(){
+	if [ -z "$1" ]; then
+		help
+		exit 1;
+	fi
+
+	if [ -z "$2" ]; then
+		help
+                exit 1;
+        fi
+
+	current=$1
+	new=$2
+	grep -rl --null $1 Assets | xargs -0 sed -i '' "s/$current/$new/g"
+
+	if [ $? -ne 0 ]; then
+		echo "There was a problem, consider rolling back."
+	else
+		echo "Your GUID has been replaced, restart Unity."
+	fi
+}
+
+random(){
+	# we sleep here because we can only use seconds on mac
+	# this helps keep it unique
+	sleep 1
+	echo $(md5 -qs "$(date +%s)")
+}
+
+# usage information
+help(){
+	echo "GUID helper"
+	echo "This script can help find and replace GUIDs"
+	echo "as well as generate a random GUID"
+	echo
+	echo "WARNING: this can really mess with your project"
+	echo "make sure you have a backup"
+	echo "Before running replace make sure your new guid"
+	echo "does not already exist with the find funciton."
+	echo "Make sure that this script is run from the"
+	echo "project root!"
+	echo
+	echo "Functions: find, replace, random"
+	echo "Usage of find: ./guid.sh find YOUR_GUID"
+	echo "Usage of replace: ./guid.sh replace YOUR_CURRENT_GUID YOUR_NEW_GUID"
+	echo "Usage of random: ./guid.sh random"
+
+}
+
+# if no arguments passed then show help
+if [ ! $1 ]; then
+        help
+        exit 1
+fi
+
+# call arguments verbatim
+$@
